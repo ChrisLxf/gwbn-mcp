@@ -1,0 +1,35 @@
+server:
+  port: 8088
+spring:
+  application:
+    name: gwbn_mcp_server
+  datasource:
+    url: jdbc:mysql://172.25.18.2:3306/rtrpt?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: rtrpt
+    password: rtrpt2026
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 60000
+      connection-timeout: 30000
+      pool-name: HikariPool-1
+
+
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: test_mcp_server
+        version: 1.0.0
+        sse-endpoint: /api/v1/sse
+        sse-message-endpoint: /api/v1/mcp
+        capabilities:
+          tool: true
+        annotation-scanner:
+          enabled: true
+
+logging:
+  level:
+    cn.net.gwbn: DEBUG
+    org.springframework.ai.mcp: TRACE
