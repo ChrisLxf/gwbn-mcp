@@ -19,12 +19,23 @@ public class Query {
     private String table;
 
     /**
+     * 普通查询字段
+     * <p>
+     * SELECT xxx
+     */
+    private List<SelectField> fields;
+
+    /**
      * 纬度字段
+     * <p>
+     * GROUP BY
      */
     private List<Dimension> dimensions;
 
     /**
      * 度量字段
+     * <p>
+     * COUNT/SUM/AVG
      */
     private List<Measure> measures;
 
@@ -89,5 +100,13 @@ public class Query {
 
     public void setJoins(List<Join> joins) {
         this.joins = joins;
+    }
+
+    public List<SelectField> getFields() {
+        return fields;
+    }
+
+    public void setFields(List<SelectField> fields) {
+        this.fields = fields;
     }
 }

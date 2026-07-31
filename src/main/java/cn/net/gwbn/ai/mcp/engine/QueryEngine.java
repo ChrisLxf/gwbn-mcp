@@ -4,10 +4,7 @@ package cn.net.gwbn.ai.mcp.engine;
 import cn.net.gwbn.ai.mcp.engine.ast.CompositeCondition;
 import cn.net.gwbn.ai.mcp.engine.ast.ConditionNode;
 import cn.net.gwbn.ai.mcp.engine.ast.LeafCondition;
-import cn.net.gwbn.ai.mcp.engine.model.Dimension;
-import cn.net.gwbn.ai.mcp.engine.model.Join;
-import cn.net.gwbn.ai.mcp.engine.model.Measure;
-import cn.net.gwbn.ai.mcp.engine.model.Query;
+import cn.net.gwbn.ai.mcp.engine.model.*;
 import cn.net.gwbn.ai.mcp.engine.result.ColumnMeta;
 import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,8 +23,7 @@ public class QueryEngine {
      */
     private final JdbcTemplate jdbcTemplate;
 
-    public
-    QueryEngine(JdbcTemplate jdbcTemplate) {
+    public QueryEngine(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -162,21 +158,31 @@ public class QueryEngine {
             sb.append(d.getColumn()).append(",");
         }
 
-        // 添加聚合字段
-        for (Measure m : query.getMeasures()) {
+        // select字段
+        if (query.getFields() != null) {
+            for (SelectField field : query.getFields()) {
+                sb.append(field.getColumn()).append(",");
+            }
+        }
 
-            // 例如：SUM(amount) AS total_amount
-            sb.append(m.getFunction())
-                    .append("(")
-                    .append(m.getColumn())
-                    .append(") AS ")
-                    .append(m.getAlias())
-                    .append(",");
+
+        // 添加聚合字段
+        if (query.getDimensions() != null) {
+            for (Measure m : query.getMeasures()) {
+                // 例如：SUM(amount) AS total_amount
+                sb.append(m.getFunction())
+                        .append("(")
+                        .append(m.getColumn())
+                        .append(") AS ")
+                        .append(m.getAlias())
+                        .append(",");
+            }
         }
 
         // 去掉最后一个逗号
         return sb.substring(0, sb.length() - 1);
     }
+
 
     /**
      * 构建 FROM + JOIN 部分,支持多表关联
@@ -208,6 +214,14 @@ public class QueryEngine {
      * 构建 GROUP BY,所有 dimension 字段必须参与 group by
      */
     private String buildGroupBy(Query query) {
+
+        if (query.getMeasures() == null || query.getMeasures().isEmpty()) {
+            return "";
+        }
+
+        if (query.getDimensions() == null || query.getDimensions().isEmpty()) {
+            return "";
+        }
 
         StringBuilder sb = new StringBuilder();
 

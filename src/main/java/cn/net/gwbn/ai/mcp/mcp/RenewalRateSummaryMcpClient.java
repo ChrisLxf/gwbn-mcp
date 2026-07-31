@@ -82,6 +82,8 @@ public class RenewalRateSummaryMcpClient {
                     例如：
                     查询2026年7月份未来1个月到期用户续费率，
                     t传1。
+                    
+                    取值范围：1~240，例如：1
                     """
             ) int t,
             @McpToolParam(description = """

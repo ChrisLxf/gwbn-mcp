@@ -4,6 +4,8 @@ import cn.net.gwbn.ai.mcp.mcp.*;
 import cn.net.gwbn.ai.mcp.sales.command.*;
 import cn.net.gwbn.ai.mcp.sales.converter.business.BusinessIncomeSummaryVoConverter;
 import cn.net.gwbn.ai.mcp.sales.converter.business.BusinessIncomeSummaryVoConverterImpl;
+import cn.net.gwbn.ai.mcp.sales.converter.coverage.CityCoverageSummaryVoConverter;
+import cn.net.gwbn.ai.mcp.sales.converter.coverage.CityCoverageSummaryVoConverterImpl;
 import cn.net.gwbn.ai.mcp.sales.converter.income.CityIncomeSummaryVoConverter;
 import cn.net.gwbn.ai.mcp.sales.converter.income.CityIncomeSummaryVoConverterImpl;
 import cn.net.gwbn.ai.mcp.engine.QueryEngine;
@@ -105,5 +107,20 @@ public class GwbnMcpAutoConfiguration {
     @Bean
     public RenewalRateSummaryMcpClient renewalRateSummaryMcpClient(RenewalCommand renewalCommand) {
         return new RenewalRateSummaryMcpClient(renewalCommand);
+    }
+
+    @Bean
+    public CityCoverageSummaryVoConverter cityCoverageSummaryVoConverter() {
+        return new CityCoverageSummaryVoConverterImpl();
+    }
+
+    @Bean
+    public CityCoverageSummaryCommand cityCoverageSummaryCommand(QueryEngine queryEngine, CityCoverageSummaryVoConverter cityCoverageSummaryVoConverter) {
+        return new CityCoverageSummaryCommand(queryEngine, cityCoverageSummaryVoConverter);
+    }
+
+    @Bean
+    public CityCoverageSummaryMcpClient cityCoverageSummaryMcpClient(CityCoverageSummaryCommand cityCoverageSummaryCommand) {
+        return new CityCoverageSummaryMcpClient(cityCoverageSummaryCommand);
     }
 }
