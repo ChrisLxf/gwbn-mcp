@@ -11,10 +11,7 @@ import cn.net.gwbn.ai.mcp.sales.converter.income.CityIncomeSummaryVoConverterImp
 import cn.net.gwbn.ai.mcp.engine.QueryEngine;
 import cn.net.gwbn.ai.mcp.sales.converter.product.ProductSummaryVoConverter;
 import cn.net.gwbn.ai.mcp.sales.converter.product.ProductSummaryVoConverterImpl;
-import cn.net.gwbn.ai.mcp.sales.converter.user.ExistUserSummaryVoConverter;
-import cn.net.gwbn.ai.mcp.sales.converter.user.ExistUserSummaryVoConverterImpl;
-import cn.net.gwbn.ai.mcp.sales.converter.user.RenewalRateSummaryVoConverter;
-import cn.net.gwbn.ai.mcp.sales.converter.user.RenewalRateSummaryVoConverterImpl;
+import cn.net.gwbn.ai.mcp.sales.converter.user.*;
 import cn.net.gwbn.ai.mcp.sales.repository.CityRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -122,5 +119,20 @@ public class GwbnMcpAutoConfiguration {
     @Bean
     public CityCoverageSummaryMcpClient cityCoverageSummaryMcpClient(CityCoverageSummaryCommand cityCoverageSummaryCommand) {
         return new CityCoverageSummaryMcpClient(cityCoverageSummaryCommand);
+    }
+
+    @Bean
+    public ActiveUserSummaryVoConverter activeUserSummaryVoConverter() {
+        return new ActiveUserSummaryVoConverterImpl();
+    }
+
+    @Bean
+    public ActiveUserSummaryCommand activeUserSummaryCommand(QueryEngine queryEngine, ActiveUserSummaryVoConverter activeUserSummaryVoConverter) {
+        return new ActiveUserSummaryCommand(queryEngine, activeUserSummaryVoConverter);
+    }
+
+    @Bean
+    public ActiveUserSummaryMcpClient activeUserSummaryMcpClient(ActiveUserSummaryCommand activeUserSummaryCommand) {
+        return new ActiveUserSummaryMcpClient(activeUserSummaryCommand);
     }
 }
