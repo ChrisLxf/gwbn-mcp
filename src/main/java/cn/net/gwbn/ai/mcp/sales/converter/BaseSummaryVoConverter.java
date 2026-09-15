@@ -4,6 +4,7 @@ import cn.net.gwbn.ai.mcp.sales.api.SummaryVieObject;
 import cn.net.gwbn.ai.mcp.engine.result.ColumnMeta;
 import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,5 +53,50 @@ public abstract class BaseSummaryVoConverter<T extends SummaryVieObject> extends
         }
 
         return 0L;
+    }
+
+
+    /**
+     * 获取BigDecimal类型的列值.
+     *
+     * @param row 数据行
+     * @param map 列名和下标映射
+     * @param possibleNames 可能的列名
+     * @return BigDecimal值, 不存在或无法转换时返回0
+     */
+    protected BigDecimal getBigDecimal(List<Object> row, Map<String, Integer> map, String... possibleNames) {
+
+        for (String name : possibleNames) {
+
+            Integer idx = map.get(name.toLowerCase());
+
+            if (idx == null || idx < 0 || idx >= row.size()) {
+                continue;
+            }
+
+            Object value = row.get(idx);
+
+            if (value == null) {
+                continue;
+            }
+
+            if (value instanceof BigDecimal) {
+                return (BigDecimal) value;
+            }
+
+            // Number类型统一转换
+            if (value instanceof Number) {
+                return new BigDecimal(value.toString());
+            }
+
+            // 其他类型尝试按照字符串转换.
+            try {
+                return new BigDecimal(value.toString());
+            } catch (NumberFormatException e) {
+                return BigDecimal.ZERO;
+            }
+        }
+
+        return BigDecimal.ZERO;
     }
 }

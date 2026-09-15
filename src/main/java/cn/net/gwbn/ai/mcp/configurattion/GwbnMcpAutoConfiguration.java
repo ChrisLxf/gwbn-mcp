@@ -2,6 +2,7 @@ package cn.net.gwbn.ai.mcp.configurattion;
 
 import cn.net.gwbn.ai.mcp.mcp.*;
 import cn.net.gwbn.ai.mcp.sales.command.*;
+import cn.net.gwbn.ai.mcp.sales.command.workorder.*;
 import cn.net.gwbn.ai.mcp.sales.converter.business.BusinessIncomeSummaryVoConverter;
 import cn.net.gwbn.ai.mcp.sales.converter.business.BusinessIncomeSummaryVoConverterImpl;
 import cn.net.gwbn.ai.mcp.sales.converter.coverage.CityCoverageSummaryVoConverter;
@@ -12,6 +13,7 @@ import cn.net.gwbn.ai.mcp.engine.QueryEngine;
 import cn.net.gwbn.ai.mcp.sales.converter.product.ProductSummaryVoConverter;
 import cn.net.gwbn.ai.mcp.sales.converter.product.ProductSummaryVoConverterImpl;
 import cn.net.gwbn.ai.mcp.sales.converter.user.*;
+import cn.net.gwbn.ai.mcp.sales.converter.workorder.*;
 import cn.net.gwbn.ai.mcp.sales.repository.CityRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -134,5 +136,94 @@ public class GwbnMcpAutoConfiguration {
     @Bean
     public ActiveUserSummaryMcpClient activeUserSummaryMcpClient(ActiveUserSummaryCommand activeUserSummaryCommand) {
         return new ActiveUserSummaryMcpClient(activeUserSummaryCommand);
+    }
+
+
+    @Bean
+    public WorkOrderStatisticVoConverter workOrderStatisticVoConverter() {
+        return new WorkOrderStatisticVoConverterImpl();
+    }
+
+    @Bean
+    public WorkOrderCompletionRateVoConverter workOrderCompletionRateVoConverter() {
+        return new WorkOrderCompletionRateVoConverterImpl();
+    }
+
+    @Bean
+    public WorkOrderStatisticCommand workOrderStatisticCommand(QueryEngine queryEngine, WorkOrderStatisticVoConverter workOrderStatisticVoConverter, WorkOrderCompletionRateVoConverter workOrderCompletionRateVoConverter) {
+        return new WorkOrderStatisticCommand(queryEngine, workOrderStatisticVoConverter, workOrderCompletionRateVoConverter);
+    }
+
+    @Bean
+    public WorkOrderStatisticMcpClient workOrderStatisticMcpClient(WorkOrderStatisticCommand workOrderStatisticCommand) {
+        return new WorkOrderStatisticMcpClient(workOrderStatisticCommand);
+    }
+
+
+    @Bean
+    public MassOrderStatisticVoConverter massOrderStatisticVoConverter() {
+        return new MassOrderStatisticVoConverterImpl();
+    }
+
+    @Bean
+    public MassOrderCompletionRateVoConverter massOrderCompletionRateVoConverter() {
+        return new MassOrderCompletionRateVoConverterImpl();
+    }
+
+    @Bean
+    public MassOrderStatisticCommand massOrderStatisticCommand(QueryEngine queryEngine, MassOrderStatisticVoConverter massOrderStatisticVoConverter, MassOrderCompletionRateVoConverter massOrderCompletionRateVoConverter) {
+        return new MassOrderStatisticCommand(queryEngine, massOrderStatisticVoConverter, massOrderCompletionRateVoConverter);
+    }
+
+    @Bean
+    public MassOrderStatisticMcpClient massOrderStatisticMcpClient(MassOrderStatisticCommand massOrderStatisticCommand) {
+        return new MassOrderStatisticMcpClient(massOrderStatisticCommand);
+    }
+
+    @Bean
+    public WorkOrderAverageDurationVoConverter workOrderAverageDurationVoConverter() {
+        return new WorkOrderAverageDurationVoConverterImpl();
+    }
+
+    @Bean
+    public WorkOrderAverageDurationCommand workOrderAverageDurationCommand(QueryEngine queryEngine, WorkOrderAverageDurationVoConverter workOrderAverageDurationVoConverter) {
+        return new WorkOrderAverageDurationCommand(queryEngine, workOrderAverageDurationVoConverter);
+    }
+
+    @Bean
+    public WorkOrderAverageDurationMcpClient workOrderAverageDurationMcpClient(WorkOrderAverageDurationCommand workOrderAverageDurationCommand) {
+        return new WorkOrderAverageDurationMcpClient(workOrderAverageDurationCommand);
+    }
+
+
+    @Bean
+    public MassOrderAverageDurationVoConverter massOrderAverageDurationVoConverter() {
+        return new MassOrderAverageDurationVoConverterImpl();
+    }
+
+    @Bean
+    public MassOrderAverageDurationCommand massOrderAverageDurationCommand(QueryEngine queryEngine, MassOrderAverageDurationVoConverter converter) {
+        return new MassOrderAverageDurationCommand(queryEngine, converter);
+    }
+
+    @Bean
+    public MassOrderAverageDurationMcpClient massOrderAverageDurationMcpClient(MassOrderAverageDurationCommand massOrderAverageDurationCommand) {
+        return new MassOrderAverageDurationMcpClient(massOrderAverageDurationCommand);
+    }
+
+
+    @Bean
+    public WorTaskAverageDurationVoConverter worTaskAverageDurationVoConverter() {
+        return new WorTaskAverageDurationVoConverterImpl();
+    }
+
+    @Bean
+    public WorTaskAverageDurationCommand worTaskAverageDurationCommand(QueryEngine queryEngine, WorTaskAverageDurationVoConverter converter) {
+        return new WorTaskAverageDurationCommand(queryEngine, converter);
+    }
+
+    @Bean
+    public WorkTaskAverageDurationMcpClient workTaskAverageDurationMcpClient(WorTaskAverageDurationCommand worTaskAverageDurationCommand) {
+        return new WorkTaskAverageDurationMcpClient(worTaskAverageDurationCommand);
     }
 }
