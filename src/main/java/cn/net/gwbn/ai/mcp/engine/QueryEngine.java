@@ -250,6 +250,14 @@ public class QueryEngine {
 
             LeafCondition leaf = (LeafCondition) node;
 
+
+            String operator = leaf.getOperator();
+
+            // IS NULL / IS NOT NULL
+            if ("IS NULL".equalsIgnoreCase(operator) || "IS NOT NULL".equalsIgnoreCase(operator)) {
+                return leaf.getColumn() + " " + operator;
+            }
+
             // IN 条件
             if ("IN".equalsIgnoreCase(leaf.getOperator())) {
                 Object value = leaf.getValue();

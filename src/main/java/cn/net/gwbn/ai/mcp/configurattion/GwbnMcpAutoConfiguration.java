@@ -223,7 +223,7 @@ public class GwbnMcpAutoConfiguration {
     }
 
     @Bean
-    public WorkTaskAverageDurationMcpClient workTaskAverageDurationMcpClient(WorTaskAverageDurationCommand worTaskAverageDurationCommand) {
-        return new WorkTaskAverageDurationMcpClient(worTaskAverageDurationCommand);
+    public WorkTaskMcpClient workTaskAverageDurationMcpClient(WorTaskAverageDurationCommand worTaskAverageDurationCommand) {
+        return new WorkTaskMcpClient(worTaskAverageDurationCommand);
     }
 }

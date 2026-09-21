@@ -4,6 +4,7 @@ import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderStatisticItemVo;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderStatisticVo;
 import cn.net.gwbn.ai.mcp.sales.converter.BaseSummaryVoConverter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -39,7 +40,7 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
     private static final String METRIC_COLUMN = "metric_value";
 
     @Override
-    public WorkOrderStatisticVo convert(int year, int month, int day, String metric, QueryResult dayResult, QueryResult monthResult) {
+    public WorkOrderStatisticVo convert(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult) {
 
         WorkOrderStatisticVo summary = new WorkOrderStatisticVo();
 
@@ -53,12 +54,8 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
         /*
          * 当前统计维度固定为工单类型.
          */
-        summary.setDimension(ORDER_TYPE_COLUMN);
+        summary.setDimension(dimension);
 
-        /*
-         * 统计指标.
-         */
-        summary.setMetric(metric);
 
         /*
          * 使用 LinkedHashMap 保证最终结果顺序
@@ -84,12 +81,47 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
         return summary;
     }
 
+    @Override
+    public WorkOrderStatisticVo convertDuplicate(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult) {
+        WorkOrderStatisticVo summary = new WorkOrderStatisticVo();
+
+        /*
+         * 基本信息.
+         */
+        summary.setYear(year);
+        summary.setMonth(month);
+        summary.setDay(day);
+        summary.setDimension(dimension);
+
+        /*
+         * 使用 LinkedHashMap 保证结果顺序.
+         */
+        Map<String, WorkOrderStatisticItemVo> itemMap = new LinkedHashMap<>();
+
+        /*
+         * 统计当天重复工单.
+         */
+        buildDuplicateItems(dayResult, itemMap, true);
+
+        /*
+         * 统计当月重复工单.
+         */
+        buildDuplicateItems(monthResult, itemMap, false);
+
+        /*
+         * 设置最终结果.
+         */
+        summary.setItems(new ArrayList<>(itemMap.values()));
+
+        return summary;
+    }
+
     /**
      * 处理查询结果.
      *
-     * @param result 查询结果
+     * @param result  查询结果
      * @param itemMap 结果 Map
-     * @param isDay true = 当天, false = 当月
+     * @param isDay   true = 当天, false = 当月
      */
     private void buildItems(QueryResult result, Map<String, WorkOrderStatisticItemVo> itemMap, boolean isDay) {
 
@@ -109,46 +141,25 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
                 continue;
             }
 
-            /*
-             * 获取维度信息.
-             */
+            // 获取维度信息.
             String orderType = getString(row, colIndex, ORDER_TYPE_COLUMN);
-
             String cityId = getString(row, colIndex, CITY_ID_COLUMN);
-
             String cityName = getString(row, colIndex, CITY_NAME_COLUMN);
 
-            /*
-             * 以:
-             *
-             * orderType + cityId + cityName
-             *
-             * 作为唯一 Key.
-             */
+            //以:orderType + cityId + cityName作为唯一 Key.
             String key = buildKey(orderType, cityId, cityName);
-
             WorkOrderStatisticItemVo item = itemMap.get(key);
 
-            /*
-             * 第一次出现该维度.
-             */
+            // 第一次出现该维度.
             if (item == null) {
-
                 item = new WorkOrderStatisticItemVo();
-
-                item.setDimensionValue(orderType);
+                item.setOrderType(orderType);
                 item.setCityId(cityId);
                 item.setCityName(cityName);
-
                 itemMap.put(key, item);
             }
 
-            /*
-             * 获取统计值.
-             *
-             * 这里直接使用 BaseSummaryVoConverter
-             * 提供的 getInt().
-             */
+            // 获取统计值.这里直接使用 BaseSummaryVoConverter提供的 getInt().
             int count = getInt(row, colIndex, METRIC_COLUMN);
 
             /*
@@ -170,9 +181,67 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
         return String.valueOf(orderType) + "_" + String.valueOf(cityId) + "_" + String.valueOf(cityName);
     }
 
+    private void buildDuplicateItems(QueryResult result, Map<String, WorkOrderStatisticItemVo> itemMap, boolean isDay) {
+
+        if (result == null || result.getRows() == null || result.getRows().isEmpty()) {
+            return;
+        }
+
+        // 建立列名 -> 下标映射.
+        Map<String, Integer> colIndex = getColumnIndexMap(result.getColumns());
+
+        for (List<Object> row : result.getRows()) {
+
+            if (row == null || row.isEmpty()) {
+                continue;
+            }
+
+            // 获取工单类型.
+            String orderType = getString(row, colIndex, ORDER_TYPE_COLUMN);
+
+            // 获取城市.
+            String cityId = getString(row, colIndex, CITY_ID_COLUMN);
+
+            String cityName = getString(row, colIndex, CITY_NAME_COLUMN);
+
+            // 获取当前用户在统计周期内的工单数量.
+            int orderCount = getInt(row, colIndex, METRIC_COLUMN);
+
+            // 同一个用户工单数量 > 1,才认为是重复用户.
+            if (orderCount <= 1) {
+                continue;
+            }
+
+            // 按 工单类型 + 城市 汇总.
+            String key = buildKey(orderType, cityId, cityName);
+
+            WorkOrderStatisticItemVo item = itemMap.get(key);
+
+            // 第一次出现该维度.
+            if (item == null) {
+
+                item = new WorkOrderStatisticItemVo();
+
+                item.setOrderType(orderType);
+                item.setCityId(cityId);
+                item.setCityName(cityName);
+
+                itemMap.put(key, item);
+            }
+
+            // 一个 user_id 无论有多少张工单,只计算 1 个重复用户.
+            if (isDay) {
+                item.setDayCount(item.getDayCount() + 1);
+            } else {
+                item.setMonthCount(item.getMonthCount() + 1);
+            }
+        }
+    }
+
+
     /**
      * IConverter 要求的转换方法.
-     *
+     * <p>
      * 当前工单统计需要同时使用当天和当月两个结果,
      * 因此该方法不是实际业务入口.
      *
@@ -181,18 +250,6 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
      */
     @Override
     public WorkOrderStatisticVo convert(QueryResult source) {
-
-        WorkOrderStatisticVo summary = new WorkOrderStatisticVo();
-
-        Map<String, WorkOrderStatisticItemVo> itemMap = new LinkedHashMap<>();
-
-        /*
-         * 单个 QueryResult 默认作为当天数据处理.
-         */
-        buildItems(source, itemMap, true);
-
-        summary.setItems(new ArrayList<>(itemMap.values()));
-
-        return summary;
+        return null;
     }
 }

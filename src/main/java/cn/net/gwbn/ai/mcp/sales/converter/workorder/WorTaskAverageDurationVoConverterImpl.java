@@ -3,7 +3,10 @@ package cn.net.gwbn.ai.mcp.sales.converter.workorder;
 import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorTaskAverageDurationItemVo;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorTaskAverageDurationVo;
+import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkTaskCountStatisticItemVo;
+import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkTaskCountStatisticVo;
 import cn.net.gwbn.ai.mcp.sales.converter.BaseSummaryVoConverter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,7 +29,9 @@ import java.util.Map;
  * @author lixiaofeng
  * @date 9/15/26
  */
-public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverter<WorTaskAverageDurationVo> implements WorTaskAverageDurationVoConverter {
+public class WorTaskAverageDurationVoConverterImpl
+        extends BaseSummaryVoConverter<WorTaskAverageDurationVo>
+        implements WorTaskAverageDurationVoConverter {
 
     /**
      * 工单类型.
@@ -54,9 +59,15 @@ public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverte
     private static final String METRIC_COLUMN = "metric_value";
 
     /**
+     * 全部工单.
+     */
+    private static final String ALL_ORDER_TYPE = "全部工单";
+
+    /**
      * 1分钟 = 60000毫秒.
      */
-    private static final BigDecimal MILLIS_PER_MINUTE = BigDecimal.valueOf(60_000L);
+    private static final BigDecimal MILLIS_PER_MINUTE =
+            BigDecimal.valueOf(60_000L);
 
     /**
      * 平均完成时长保留2位小数.
@@ -90,7 +101,141 @@ public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverte
     }
 
     /**
-     * 合并查询结果.
+     * 转换工单任务数量统计结果.
+     *
+     * <p>
+     * dayResult 对应当日数量.
+     * monthResult 对应当月数量.
+     * </p>
+     *
+     * @param year        年
+     * @param month       月
+     * @param day         日
+     * @param dimension   统计维度
+     * @param dayResult   当日查询结果
+     * @param monthResult 当月查询结果
+     * @return 工单任务数量统计结果
+     */
+    @Override
+    public WorkTaskCountStatisticVo convert(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult) {
+
+        WorkTaskCountStatisticVo summary = new WorkTaskCountStatisticVo();
+
+        summary.setYear(year);
+        summary.setMonth(month);
+        summary.setDay(day);
+        summary.setDimension(dimension);
+
+        Map<String, WorkTaskCountStatisticItemVo> itemMap = new LinkedHashMap<>();
+
+        /*
+         * 当日数据.
+         */
+        mergeTaskCountResult(itemMap, dayResult, true);
+
+        /*
+         * 当月数据.
+         */
+        mergeTaskCountResult(itemMap, monthResult, false);
+
+        summary.setWorkTaskCountStatisticItemVoList(new ArrayList<>(itemMap.values()));
+
+        return summary;
+    }
+
+    /**
+     * 合并任务数量查询结果.
+     *
+     * @param itemMap 结果Map
+     * @param result  查询结果
+     * @param dayData 是否为当日数据
+     */
+    private void mergeTaskCountResult(Map<String, WorkTaskCountStatisticItemVo> itemMap, QueryResult result, boolean dayData) {
+
+        if (result == null || result.getRows() == null || result.getRows().isEmpty()) {
+            return;
+        }
+
+        Map<String, Integer> colIndex = getColumnIndexMap(result.getColumns());
+
+        for (List<Object> row : result.getRows()) {
+
+            if (row == null || row.isEmpty()) {
+                continue;
+            }
+
+            /*
+             * 工单类型.
+             *
+             * 当没有指定工单类型时,
+             * 查询结果中没有 order_type 字段.
+             */
+            String orderType = getString(row, colIndex, ORDER_TYPE_COLUMN);
+
+            if (StringUtils.isBlank(orderType)) {
+                orderType = ALL_ORDER_TYPE;
+            }
+
+            /*
+             * 城市ID.
+             */
+            String cityId = getString(row, colIndex, CITY_ID_COLUMN);
+
+            /*
+             * 城市名称.
+             */
+            String cityName = getString(row, colIndex, CITY_NAME_COLUMN);
+
+            /*
+             * 任务名称.
+             */
+            String taskName = getString(row, colIndex, TASK_NAME_COLUMN);
+
+            /*
+             * 工单类型 + 城市 + 任务
+             * 唯一确定一条统计数据.
+             */
+            String key = buildKey(orderType, cityId, cityName, taskName);
+
+            WorkTaskCountStatisticItemVo item = itemMap.get(key);
+
+            if (item == null) {
+
+                item = new WorkTaskCountStatisticItemVo();
+
+                item.setOrderType(orderType);
+                item.setCityId(cityId);
+                item.setCityName(cityName);
+                item.setTaskName(taskName);
+
+                itemMap.put(key, item);
+            }
+
+            /*
+             * 获取统计数量.
+             *
+             * COUNT 查询结果统一转换为 BigDecimal.
+             */
+            BigDecimal countValue = getBigDecimal(row, colIndex, METRIC_COLUMN);
+
+            int count = countValue == null ? 0 : countValue.intValue();
+
+            /*
+             * 当日数量.
+             */
+            if (dayData) {
+                item.setDayCount(count);
+            } else {
+                /*
+                 * 当月数量.
+                 */
+                item.setMonthCount(count);
+            }
+        }
+    }
+
+    /**
+     * 合并平均完成时长查询结果.
      *
      * @param itemMap 结果Map
      * @param result  查询结果
@@ -99,7 +244,6 @@ public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverte
     private void mergeResult(Map<String, WorTaskAverageDurationItemVo> itemMap, QueryResult result, boolean dayData) {
 
         if (result == null || result.getRows() == null || result.getRows().isEmpty()) {
-
             return;
         }
 
@@ -115,6 +259,10 @@ public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverte
              * 工单类型.
              */
             String orderType = getString(row, colIndex, ORDER_TYPE_COLUMN);
+
+            if (StringUtils.isBlank(orderType)) {
+                orderType = ALL_ORDER_TYPE;
+            }
 
             /*
              * 城市ID.
@@ -137,8 +285,7 @@ public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverte
              */
             String key = buildKey(orderType, cityId, cityName, taskName);
 
-            WorTaskAverageDurationItemVo item =
-                    itemMap.get(key);
+            WorTaskAverageDurationItemVo item = itemMap.get(key);
 
             if (item == null) {
 
@@ -166,7 +313,6 @@ public class WorTaskAverageDurationVoConverterImpl extends BaseSummaryVoConverte
 
             if (dayData) {
                 item.setDayAverageDuration(durationMinutes);
-
             } else {
                 item.setMonthAverageDuration(durationMinutes);
             }

@@ -26,15 +26,6 @@ public class WorTaskAverageDurationVo extends SummaryVieObject {
      */
     private int day;
 
-    /**
-     * 当日平均完成时长, 单位: 分钟.
-     */
-    private BigDecimal dayAverageDuration;
-
-    /**
-     * 当月平均完成时长, 单位: 分钟.
-     */
-    private BigDecimal monthAverageDuration;
 
     /**
      * 明细.
@@ -63,22 +54,6 @@ public class WorTaskAverageDurationVo extends SummaryVieObject {
 
     public void setDay(int day) {
         this.day = day;
-    }
-
-    public BigDecimal getDayAverageDuration() {
-        return dayAverageDuration;
-    }
-
-    public void setDayAverageDuration(BigDecimal dayAverageDuration) {
-        this.dayAverageDuration = dayAverageDuration;
-    }
-
-    public BigDecimal getMonthAverageDuration() {
-        return monthAverageDuration;
-    }
-
-    public void setMonthAverageDuration(BigDecimal monthAverageDuration) {
-        this.monthAverageDuration = monthAverageDuration;
     }
 
     public List<WorTaskAverageDurationItemVo> getItems() {

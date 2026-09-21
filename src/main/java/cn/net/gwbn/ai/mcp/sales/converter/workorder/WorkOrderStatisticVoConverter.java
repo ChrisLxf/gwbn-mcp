@@ -18,10 +18,23 @@ public interface WorkOrderStatisticVoConverter extends IConverter<QueryResult, W
      * @param year        年
      * @param month       月
      * @param day         日
-     * @param metric      统计指标
+     * @param dimension   维度
      * @param dayResult   当天查询结果
      * @param monthResult 当月查询结果
      * @return 工单统计结果
      */
-    WorkOrderStatisticVo convert(int year, int month, int day, String metric, QueryResult dayResult, QueryResult monthResult);
+    WorkOrderStatisticVo convert(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult);
+
+    /**
+     * 工单重复统计结果
+     *
+     * @param year
+     * @param month
+     * @param day
+     * @param dimension
+     * @param dayResult
+     * @param monthResult
+     * @return
+     */
+    WorkOrderStatisticVo convertDuplicate(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult);
 }

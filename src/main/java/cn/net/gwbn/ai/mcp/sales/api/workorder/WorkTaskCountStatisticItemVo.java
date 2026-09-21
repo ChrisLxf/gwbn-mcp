@@ -1,37 +1,42 @@
 package cn.net.gwbn.ai.mcp.sales.api.workorder;
 
 /**
- * 工单统计明细
- *
  * @author lixiaofeng
- * @date 9/14/26 PM1:29
+ * @date 9/17/26 PM1:53
  **/
-public class WorkOrderStatisticItemVo {
+public class WorkTaskCountStatisticItemVo {
+
 
     /**
-     * 工单类型
+     * 工单类型.
      */
     private String orderType;
 
     /**
-     * 每日数量
-     */
-    private int dayCount;
-
-    /**
-     * 每月数量
-     */
-    private int monthCount;
-
-    /**
-     * 城市id
+     * 城市ID.
      */
     private String cityId;
 
     /**
-     * 城市名称
+     * 城市名称.
      */
     private String cityName;
+
+    /**
+     * 任务名称.
+     */
+    private String taskName;
+
+
+    /**
+     * 当日数量
+     */
+    private int dayCount;
+
+    /**
+     * 当月数量
+     */
+    private int monthCount;
 
     public String getOrderType() {
         return orderType;
@@ -55,6 +60,14 @@ public class WorkOrderStatisticItemVo {
 
     public void setCityName(String cityName) {
         this.cityName = cityName;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
     }
 
     public int getDayCount() {

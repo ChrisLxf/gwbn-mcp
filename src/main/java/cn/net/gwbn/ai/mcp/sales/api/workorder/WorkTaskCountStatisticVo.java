@@ -5,25 +5,24 @@ import cn.net.gwbn.ai.mcp.sales.api.SummaryVieObject;
 import java.util.List;
 
 /**
- * 工单统计展示模型
- *
  * @author lixiaofeng
- * @date 9/14/26 PM1:28
+ * @date 9/17/26 PM1:52
  **/
-public class WorkOrderStatisticVo  extends SummaryVieObject {
+public class WorkTaskCountStatisticVo extends SummaryVieObject {
+
 
     /**
-     * 年
+     * 年.
      */
     private int year;
 
     /**
-     * 月
+     * 月.
      */
     private int month;
 
     /**
-     * 日
+     * 日.
      */
     private int day;
 
@@ -33,12 +32,7 @@ public class WorkOrderStatisticVo  extends SummaryVieObject {
     private String dimension;
 
 
-
-    /**
-     * 统计结果
-     */
-    private List<WorkOrderStatisticItemVo> items;
-
+    private List<WorkTaskCountStatisticItemVo> workTaskCountStatisticItemVoList;
 
     public int getYear() {
         return year;
@@ -72,11 +66,11 @@ public class WorkOrderStatisticVo  extends SummaryVieObject {
         this.dimension = dimension;
     }
 
-    public List<WorkOrderStatisticItemVo> getItems() {
-        return items;
+    public List<WorkTaskCountStatisticItemVo> getWorkTaskCountStatisticItemVoList() {
+        return workTaskCountStatisticItemVoList;
     }
 
-    public void setItems(List<WorkOrderStatisticItemVo> items) {
-        this.items = items;
+    public void setWorkTaskCountStatisticItemVoList(List<WorkTaskCountStatisticItemVo> workTaskCountStatisticItemVoList) {
+        this.workTaskCountStatisticItemVoList = workTaskCountStatisticItemVoList;
     }
 }

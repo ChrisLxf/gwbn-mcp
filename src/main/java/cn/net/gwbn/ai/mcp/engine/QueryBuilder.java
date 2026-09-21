@@ -155,6 +155,13 @@ public class QueryBuilder {
         return new LeafCondition(column,"=",value);
     }
 
+    /**
+     * 不等于
+     */
+    public static LeafCondition ne(String column, Object value) {
+        return new LeafCondition(column, "<>", value);
+    }
+
 
 
     public static LeafCondition gt(String column,Object value){
@@ -183,6 +190,10 @@ public class QueryBuilder {
 
     public static LeafCondition like(String column,Object value){
         return new LeafCondition(column,"LIKE",value);
+    }
+
+    public static LeafCondition isNull(String column) {
+        return new LeafCondition(column, "IS NULL", "");
     }
 
 
