@@ -115,10 +115,11 @@ public class WorkOrderStatisticMcpClient {
             description = """
                     查询已完成工单数量。
                     
+                    
                     统计口径：
                     - 工单状态固定为 COMPLETED。
                     - 所有查询都会按照工单创建时间进行统计。
-                    - useCompleteDate 用于判断是否时当日创建当日完成的工单
+                    - useCompleteDate 用于判断是否时指定日期并且在创建指定日期完成的工单
                     
                     当 useCompleteDate = true：
                     - 指定日期创建并且在指定日期完成的工单
@@ -371,19 +372,21 @@ public class WorkOrderStatisticMcpClient {
     /**
      * 按工单全部类型统计.
      */
+    /**
+     * 按工单全部类型统计.
+     */
     @McpTool(
             name = "getWorkOrderTypeStatistic",
             annotations = @McpTool.McpAnnotations(readOnlyHint = true),
             description = """
-                    查询指定日期的工单类型分类统计, 同时返回当月累计工单数量.
+                    查询指定日期的工单二级分类和三级分类统计, 同时返回指定月份整月工单数量.
                     
                     统计口径：
                     - 按工单创建时间统计.
                     - 不限制工单状态.
                     - 包含进行中、已完成等全部工单.
-                    - 按工单一级类型、二级类型、三级类型进行分类统计.
+                    - 按一级、二级、三级工单类型进行详细分类统计.
                     - 统计值为工单数量.
-                    - 工单详细分类
                     
                     统计维度：
                     - 一级工单类型 order_type
@@ -398,13 +401,14 @@ public class WorkOrderStatisticMcpClient {
                     - 城市ID
                     - 城市名称
                     - 当日工单数量
-                    - 当月累计工单数量
+                    - 当月工单数量
                     
                     时间规则：
                     - day 必须指定具体日期, 取值范围：1~31.
                     - 当日工单数量表示指定日期创建的工单数量.
-                    - 当月累计工单数量表示指定月份从月初至整月范围内创建的工单数量.
-                    - 工具会自动同时查询指定日期和整月数据, 调用时不需要额外指定月度统计参数.
+                    - 当月工单数量表示指定月份整月创建的工单数量.
+                    - 工具会自动同时查询指定日期和指定月份整月数据.
+                    - 调用工具时不需要额外指定月度统计参数.
                     
                     城市参数：
                     - 不指定城市时, 查询全部城市.
@@ -414,16 +418,15 @@ public class WorkOrderStatisticMcpClient {
                     注意：
                     - 本工具统计的是工单数量, 不是用户数量.
                     - 不根据工单状态进行筛选.
-                    - 一级、二级、三级工单类型共同构成工单分类维度.
-                    - 如果用户只提供年份和月份而没有提供具体日期, 应要求用户补充查询日期.
+                    - 一级、二级、三级工单类型共同构成详细工单分类维度.
+                    - 如果用户只提供年份和月份而没有提供具体日期, 应要求用户补充具体查询日期.
                     """
     )
     public WorkOrderTypeStatisticVo getWorkOrderTypeStatistic(
             @McpToolParam(description = "统计年份, 例如：2026") int year,
             @McpToolParam(description = "统计月份, 取值范围：1~12, 例如：9") int month,
-            @McpToolParam(description = "统计日期, 必须指定具体日期, 取值范围：1~31, 例如：15. 不允许传0, 工具会自动返回当日和当月累计统计") int day,
+            @McpToolParam(description = "统计日期, 必须指定具体日期, 取值范围：1~31, 例如：15. 不允许传0. 工具会自动返回指定日期和指定月份整月统计") int day,
             @McpToolParam(description = "城市名称列表, 例如：[北京市, 上海市, 广州市]. 不指定城市表示查询全部城市") List<String> cityNames) {
-
         return workOrderStatisticCommand.orderTypeStatistic(year, month, day, cityNames);
     }
 
