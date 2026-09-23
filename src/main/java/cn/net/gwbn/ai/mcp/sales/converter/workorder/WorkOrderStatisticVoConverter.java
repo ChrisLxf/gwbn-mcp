@@ -2,6 +2,7 @@ package cn.net.gwbn.ai.mcp.sales.converter.workorder;
 
 import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderStatisticVo;
+import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderTypeStatisticVo;
 import cn.net.gwbn.ai.mcp.sales.converter.IConverter;
 
 /**
@@ -37,4 +38,19 @@ public interface WorkOrderStatisticVoConverter extends IConverter<QueryResult, W
      * @return
      */
     WorkOrderStatisticVo convertDuplicate(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult);
+
+
+    /**
+     * 转换工单类型统计结果.
+     *
+     * @param year        年
+     * @param month       月
+     * @param day         日
+     * @param dimension   统计维度
+     * @param dayResult   当日查询结果
+     * @param monthResult 当月查询结果
+     * @return 工单类型统计结果
+     */
+    WorkOrderTypeStatisticVo convertOrderType(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult);
+
 }

@@ -7,6 +7,7 @@ import cn.net.gwbn.ai.mcp.engine.model.Query;
 import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderCompletionRateVo;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderStatisticVo;
+import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderTypeStatisticVo;
 import cn.net.gwbn.ai.mcp.sales.converter.workorder.WorkOrderCompletionRateVoConverter;
 import cn.net.gwbn.ai.mcp.sales.converter.workorder.WorkOrderStatisticVoConverter;
 import cn.net.gwbn.ai.mcp.utils.StringUtils;
@@ -164,6 +165,22 @@ public class WorkOrderStatisticCommand {
 
 
         return workOrderStatisticVoConverter.convertDuplicate(year, month, day, "工单重复统计", queryDayDuplicateResult, queryMonthDuplicateResult);
+    }
+
+    /**
+     * 按工单全部类型统计
+     */
+    public WorkOrderTypeStatisticVo orderTypeStatistic(int year, int month, int day, List<String> cityNames) {
+
+        // 按日进行类型统计
+        Query queryDayOrderTypeQuery = buildOrderTypeQuery(year, month, day, cityNames);
+        QueryResult dayOrderTypeResult = queryEngine.query(queryDayOrderTypeQuery);
+
+        // 按月进行类型统计
+        Query queryDayMonthTypeQuery = buildOrderTypeQuery(year, month, 0, cityNames);
+        QueryResult monthOrderTypeResult = queryEngine.query(queryDayMonthTypeQuery);
+
+        return workOrderStatisticVoConverter.convertOrderType(year,month,day,"工单类别统计",dayOrderTypeResult,monthOrderTypeResult);
     }
 
     /**
@@ -369,6 +386,56 @@ public class WorkOrderStatisticCommand {
 
         return builder.build();
     }
+
+
+    /**
+     * 构造菜单统计
+     */
+    private Query buildOrderTypeQuery(int year, int month, int day, List<String> cityNames) {
+
+        QueryBuilder builder = QueryBuilder.table("work_order_statistic s")
+                .dimension("s.order_type")
+                .dimension("s.city_id")
+                .dimension("s.city_name")
+                .dimension("s.second_type")
+                .dimension("s.third_type");
+
+        List<ConditionNode> conditions = new ArrayList<>();
+
+        // 年
+        conditions.add(QueryBuilder.eq("s.create_year", year));
+
+        // 月
+        conditions.add(QueryBuilder.eq("s.create_month", month));
+
+        // 日
+        if (day > 0) {
+            conditions.add(QueryBuilder.eq("s.create_day", day));
+        }
+
+        /*
+         * 城市过滤.
+         */
+        if (cityNames != null && !cityNames.isEmpty()) {
+            if (cityNames.size() == 1) {
+                conditions.add(QueryBuilder.eq("s.city_name", cityNames.get(0)));
+
+            } else {
+                conditions.add(QueryBuilder.in("s.city_name", cityNames));
+            }
+        }
+
+        // WHERE
+        builder.where(QueryBuilder.and(conditions.toArray(new ConditionNode[0])));
+
+
+        // 聚合
+        builder.count("s.order_no", METRIC);
+
+        return builder.build();
+    }
+
+
 
 
 }

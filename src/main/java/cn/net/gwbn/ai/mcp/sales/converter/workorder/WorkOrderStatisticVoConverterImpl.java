@@ -3,6 +3,8 @@ package cn.net.gwbn.ai.mcp.sales.converter.workorder;
 import cn.net.gwbn.ai.mcp.engine.result.QueryResult;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderStatisticItemVo;
 import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderStatisticVo;
+import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderTypeStatisticItemVo;
+import cn.net.gwbn.ai.mcp.sales.api.workorder.WorkOrderTypeStatisticVo;
 import cn.net.gwbn.ai.mcp.sales.converter.BaseSummaryVoConverter;
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,6 +35,16 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
      * 城市名称.
      */
     private static final String CITY_NAME_COLUMN = "city_name";
+
+    /**
+     * 二级类型.
+     */
+    private static final String SECOND_TYPE_COLUMN = "second_type";
+
+    /**
+     * 三级类型.
+     */
+    private static final String THIRD_TYPE_COLUMN = "third_type";
 
     /**
      * 聚合结果.
@@ -107,6 +119,46 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
          * 统计当月重复工单.
          */
         buildDuplicateItems(monthResult, itemMap, false);
+
+        /*
+         * 设置最终结果.
+         */
+        summary.setItems(new ArrayList<>(itemMap.values()));
+
+        return summary;
+    }
+
+    @Override
+    public WorkOrderTypeStatisticVo convertOrderType(int year, int month, int day, String dimension, QueryResult dayResult, QueryResult monthResult) {
+
+        WorkOrderTypeStatisticVo summary = new WorkOrderTypeStatisticVo();
+
+        /*
+         * 基本信息.
+         */
+        summary.setYear(year);
+        summary.setMonth(month);
+        summary.setDay(day);
+        summary.setDimension(dimension);
+
+        /*
+         * 使用 LinkedHashMap 保证最终结果顺序
+         * 与查询结果顺序基本一致.
+         *
+         * Key:
+         * orderType + secondType + thirdType + cityId + cityName
+         */
+        Map<String, WorkOrderTypeStatisticItemVo> itemMap = new LinkedHashMap<>();
+
+        /*
+         * 处理当天数据.
+         */
+        buildOrderTypeItems(dayResult, itemMap, true);
+
+        /*
+         * 处理当月数据.
+         */
+        buildOrderTypeItems(monthResult, itemMap, false);
 
         /*
          * 设置最终结果.
@@ -236,6 +288,103 @@ public class WorkOrderStatisticVoConverterImpl extends BaseSummaryVoConverter<Wo
                 item.setMonthCount(item.getMonthCount() + 1);
             }
         }
+    }
+
+
+    /**
+     * 处理工单类型查询结果.
+     *
+     * @param result  查询结果
+     * @param itemMap 结果 Map
+     * @param isDay   true = 当天, false = 当月
+     */
+    private void buildOrderTypeItems(QueryResult result, Map<String, WorkOrderTypeStatisticItemVo> itemMap, boolean isDay) {
+
+        if (result == null || result.getRows() == null || result.getRows().isEmpty()) {
+            return;
+        }
+
+        /*
+         * 建立列名 -> 下标映射.
+         */
+        Map<String, Integer> colIndex = getColumnIndexMap(result.getColumns());
+
+        for (List<Object> row : result.getRows()) {
+
+            if (row == null || row.isEmpty()) {
+                continue;
+            }
+
+            // 获取一级工单类型.
+            String orderType = getString(row, colIndex, ORDER_TYPE_COLUMN);
+
+            // 获取二级工单类型.
+            String secondType = getString(row, colIndex, SECOND_TYPE_COLUMN);
+
+            // 获取三级工单类型.
+            String thirdType = getString(row, colIndex, THIRD_TYPE_COLUMN);
+
+            // 获取城市.
+            String cityId = getString(row, colIndex, CITY_ID_COLUMN);
+
+            String cityName = getString(row, colIndex, CITY_NAME_COLUMN);
+
+            /*
+             * 工单类型 + 二级类型 + 三级类型 + 城市
+             * 作为唯一统计维度.
+             */
+            String key = buildOrderTypeKey(orderType, secondType, thirdType, cityId, cityName);
+
+            WorkOrderTypeStatisticItemVo item = itemMap.get(key);
+
+            /*
+             * 第一次出现该维度.
+             */
+            if (item == null) {
+
+                item = new WorkOrderTypeStatisticItemVo();
+
+                item.setOrderType(orderType);
+                item.setSecondType(secondType);
+                item.setThirdType(thirdType);
+                item.setCityId(cityId);
+                item.setCityName(cityName);
+
+                itemMap.put(key, item);
+            }
+
+            /*
+             * 获取统计数量.
+             *
+             * buildOrderTypeQuery() 使用:
+             * COUNT(s.order_no)
+             */
+            int count = getInt(row, colIndex, METRIC_COLUMN);
+
+            /*
+             * 设置当天 / 当月数量.
+             */
+            if (isDay) {
+                item.setDayCount(count);
+            } else {
+                item.setMonthCount(count);
+            }
+        }
+    }
+
+    /**
+     * 构造工单类型统计唯一 Key.
+     *
+     * @param orderType  一级工单类型
+     * @param secondType 二级工单类型
+     * @param thirdType  三级工单类型
+     * @param cityId     城市 ID
+     * @param cityName   城市名称
+     * @return 唯一 Key
+     */
+    private String buildOrderTypeKey(String orderType, String secondType, String thirdType, String cityId, String cityName) {
+
+        return String.valueOf(orderType) + "_" + String.valueOf(secondType) + "_" + String.valueOf(thirdType) + "_" + String.valueOf(cityId) + "_" + String.valueOf(cityName);
     }
 
 
